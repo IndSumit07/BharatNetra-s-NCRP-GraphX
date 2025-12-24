@@ -8,14 +8,29 @@ import {
 } from "lucide-react";
 
 // Define helper function outside component to avoid initialization issues
+// Define helper function outside component to avoid initialization issues
 const getLayerColor = (layerIndex) => {
     const colors = [
-        { stroke: '#06b6d4', fill: '#06b6d4', bg: 'from-cyan-500 to-cyan-600' },
-        { stroke: '#14b8a6', fill: '#14b8a6', bg: 'from-teal-500 to-teal-600' },
-        { stroke: '#10b981', fill: '#10b981', bg: 'from-emerald-500 to-emerald-600' },
-        { stroke: '#3b82f6', fill: '#3b82f6', bg: 'from-blue-500 to-blue-600' },
-        { stroke: '#6366f1', fill: '#6366f1', bg: 'from-indigo-500 to-indigo-600' },
-        { stroke: '#0ea5e9', fill: '#0ea5e9', bg: 'from-sky-500 to-sky-600' },
+        { stroke: '#06b6d4', fill: '#06b6d4' }, // Cyan
+        { stroke: '#8b5cf6', fill: '#8b5cf6' }, // Violet
+        { stroke: '#f97316', fill: '#f97316' }, // Orange
+        { stroke: '#10b981', fill: '#10b981' }, // Emerald
+        { stroke: '#3b82f6', fill: '#3b82f6' }, // Blue
+        { stroke: '#d946ef', fill: '#d946ef' }, // Fuchsia
+        { stroke: '#f43f5e', fill: '#f43f5e' }, // Rose
+        { stroke: '#84cc16', fill: '#84cc16' }, // Lime
+        { stroke: '#6366f1', fill: '#6366f1' }, // Indigo
+        { stroke: '#eab308', fill: '#eab308' }, // Yellow
+        { stroke: '#ec4899', fill: '#ec4899' }, // Pink
+        { stroke: '#14b8a6', fill: '#14b8a6' }, // Teal
+        { stroke: '#ef4444', fill: '#ef4444' }, // Red
+        { stroke: '#a855f7', fill: '#a855f7' }, // Purple
+        { stroke: '#22c55e', fill: '#22c55e' }, // Green
+        { stroke: '#f59e0b', fill: '#f59e0b' }, // Amber
+        { stroke: '#0ea5e9', fill: '#0ea5e9' }, // Sky
+        { stroke: '#db2777', fill: '#db2777' }, // Pink-600
+        { stroke: '#16a34a', fill: '#16a34a' }, // Green-600
+        { stroke: '#357ae8', fill: '#357ae8' }, // Royal Blue
     ];
     return colors[layerIndex % colors.length];
 };
@@ -23,6 +38,7 @@ const getLayerColor = (layerIndex) => {
 export default function InteractiveTreeView({ data, onBack }) {
     const [selectedNode, setSelectedNode] = useState(null);
     const [zoom, setZoom] = useState(0.5);
+    const zoomRef = useRef(0.5); // Add ref for smooth non-reactive updates
     const [nodePositions, setNodePositions] = useState({});
     const [draggingNode, setDraggingNode] = useState(null);
     const [hasDragged, setHasDragged] = useState(false);
@@ -43,6 +59,7 @@ export default function InteractiveTreeView({ data, onBack }) {
     const [isPanning, setIsPanning] = useState(false); // Flag for panning state
     const animationFrameRef = useRef(null); // For rAF loop
     const nodeDragStartPosRef = useRef(null); // Node position at start of drag
+    const containerRef = useRef(null); // Container for wheel events
 
     // Organize nodes by layers
     const organizeByLayers = useCallback((node, layerMap = {}) => {
@@ -143,7 +160,7 @@ export default function InteractiveTreeView({ data, onBack }) {
     // Apply Transform Helper - Updates DOM directly bypassing React render cycle
     const updateTransform = () => {
         if (svgGroupRef.current) {
-            svgGroupRef.current.style.transform = `translate(${panRef.current.x}px, ${panRef.current.y}px) scale(${zoom})`;
+            svgGroupRef.current.style.transform = `translate(${panRef.current.x}px, ${panRef.current.y}px) scale(${zoomRef.current})`;
         }
     };
 
@@ -164,12 +181,11 @@ export default function InteractiveTreeView({ data, onBack }) {
                 const newY = panStartRef.current.y + dy;
 
                 panRef.current = { x: newX, y: newY };
-                if (svgGroupRef.current) {
-                    svgGroupRef.current.style.transform = `translate(${newX}px, ${newY}px) scale(${zoom})`;
-                }
+                updateTransform(); // Use helper
             } else if (draggingNode && nodeDragStartPosRef.current) {
-                const newX = nodeDragStartPosRef.current.x + dx / zoom;
-                const newY = nodeDragStartPosRef.current.y + dy / zoom;
+                const currentZoom = zoomRef.current;
+                const newX = nodeDragStartPosRef.current.x + dx / currentZoom;
+                const newY = nodeDragStartPosRef.current.y + dy / currentZoom;
 
                 setNodePositions(prev => ({
                     ...prev,
@@ -194,20 +210,89 @@ export default function InteractiveTreeView({ data, onBack }) {
             window.removeEventListener('mousemove', handleWindowMouseMove);
             window.removeEventListener('mouseup', handleWindowMouseUp);
         };
-    }, [isPanning, draggingNode, zoom]); // Re-bind when dragging state or zoom changes
+    }, [isPanning, draggingNode]); // Removed zoom dependency, using ref!
 
-    // Update transform when zoom changes (keep sync)
-    useEffect(() => {
+    const handleZoomIn = () => {
+        const newZoom = Math.min(zoomRef.current + 0.1, 2);
+        zoomRef.current = newZoom;
+        setZoom(newZoom);
         updateTransform();
-    }, [zoom]);
-
-    const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.1, 2));
-    const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.1, 0.2));
+    };
+    const handleZoomOut = () => {
+        const newZoom = Math.max(zoomRef.current - 0.1, 0.2);
+        zoomRef.current = newZoom;
+        setZoom(newZoom);
+        updateTransform();
+    };
     const handleResetView = () => {
+        zoomRef.current = 0.5;
         setZoom(0.5);
         panRef.current = { x: 0, y: 0 };
         updateTransform();
     };
+
+    // Wheel Event Handler (Pinch to Zoom & Trackpad Pan)
+    useEffect(() => {
+        const handleWheel = (e) => {
+            // Prevent default browser zooming behavior for pinch
+            if (e.ctrlKey) {
+                e.preventDefault();
+            }
+
+            if (e.ctrlKey) {
+                // Pinch-to-Zoom (Trackpad Pinch or Ctrl+Wheel)
+                const zoomSensitivity = 0.002;
+                const delta = -e.deltaY * zoomSensitivity;
+                const currentZoom = zoomRef.current;
+                const newZoom = Math.min(Math.max(currentZoom + delta, 0.2), 3);
+
+                // Pointer-based Zoom: Zoom towards mouse position
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+
+                // Calculate world coordinates under cursor before zoom
+                const worldX = (mouseX - panRef.current.x) / currentZoom;
+                const worldY = (mouseY - panRef.current.y) / currentZoom;
+
+                // Calculate new Pan to keep that world coordinate under cursor
+                const newPanX = mouseX - (worldX * newZoom);
+                const newPanY = mouseY - (worldY * newZoom);
+
+                panRef.current = { x: newPanX, y: newPanY };
+                zoomRef.current = newZoom;
+
+                // 1. Direct DOM update (ZERO LAG)
+                updateTransform();
+
+                // 2. Throttle React State Update (for UI counter only)
+                if (!animationFrameRef.current) {
+                    animationFrameRef.current = requestAnimationFrame(() => {
+                        setZoom(newZoom);
+                        animationFrameRef.current = null;
+                    });
+                }
+
+            } else {
+                // Two-Finger Pan / Mouse Wheel Scroll
+                const newX = panRef.current.x - e.deltaX;
+                const newY = panRef.current.y - e.deltaY;
+
+                panRef.current = { x: newX, y: newY };
+                updateTransform();
+            }
+        };
+
+        const container = containerRef.current;
+        if (container) {
+            container.addEventListener('wheel', handleWheel, { passive: false });
+        }
+
+        return () => {
+            if (container) {
+                container.removeEventListener('wheel', handleWheel);
+            }
+        };
+    }, []); // Empty dependency array! logic relies on refs now.
 
     const handleCanvasMouseDown = (e) => {
         // Since nodes stop propagation, any click reaching here is on the background
@@ -326,7 +411,10 @@ export default function InteractiveTreeView({ data, onBack }) {
                 </div>
 
                 {/* Infinite Canvas */}
-                <div className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing bg-[#0a0e1a] relative select-none">
+                <div
+                    ref={containerRef}
+                    className="flex-1 overflow-hidden cursor-grab active:cursor-grabbing bg-[#0a0e1a] relative select-none"
+                >
                     <svg
                         width="100%"
                         height="100%"

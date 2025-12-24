@@ -222,14 +222,29 @@ export default function TreeWorkspace({ data }) {
   };
 
   // Color scheme for different layers
+  // Color scheme for different layers
   const getLayerColor = (layerIndex) => {
     const colors = [
-      { bg: 'from-cyan-500 to-cyan-600', border: 'border-cyan-400', shadow: 'shadow-cyan-500/30', glow: 'bg-cyan-500/10' },
-      { bg: 'from-teal-500 to-teal-600', border: 'border-teal-400', shadow: 'shadow-teal-500/30', glow: 'bg-teal-500/10' },
-      { bg: 'from-emerald-500 to-emerald-600', border: 'border-emerald-400', shadow: 'shadow-emerald-500/30', glow: 'bg-emerald-500/10' },
-      { bg: 'from-blue-500 to-blue-600', border: 'border-blue-400', shadow: 'shadow-blue-500/30', glow: 'bg-blue-500/10' },
-      { bg: 'from-indigo-500 to-indigo-600', border: 'border-indigo-400', shadow: 'shadow-indigo-500/30', glow: 'bg-indigo-500/10' },
-      { bg: 'from-sky-500 to-sky-600', border: 'border-sky-400', shadow: 'shadow-sky-500/30', glow: 'bg-sky-500/10' },
+      { bg: 'from-cyan-500 to-cyan-600', border: 'border-cyan-400', shadow: 'shadow-cyan-500/30', glow: 'bg-cyan-500/10' }, // Cyan
+      { bg: 'from-violet-500 to-violet-600', border: 'border-violet-400', shadow: 'shadow-violet-500/30', glow: 'bg-violet-500/10' }, // Violet
+      { bg: 'from-orange-500 to-orange-600', border: 'border-orange-400', shadow: 'shadow-orange-500/30', glow: 'bg-orange-500/10' }, // Orange
+      { bg: 'from-emerald-500 to-emerald-600', border: 'border-emerald-400', shadow: 'shadow-emerald-500/30', glow: 'bg-emerald-500/10' }, // Emerald
+      { bg: 'from-blue-500 to-blue-600', border: 'border-blue-400', shadow: 'shadow-blue-500/30', glow: 'bg-blue-500/10' }, // Blue
+      { bg: 'from-fuchsia-500 to-fuchsia-600', border: 'border-fuchsia-400', shadow: 'shadow-fuchsia-500/30', glow: 'bg-fuchsia-500/10' }, // Fuchsia
+      { bg: 'from-rose-500 to-rose-600', border: 'border-rose-400', shadow: 'shadow-rose-500/30', glow: 'bg-rose-500/10' }, // Rose
+      { bg: 'from-lime-500 to-lime-600', border: 'border-lime-400', shadow: 'shadow-lime-500/30', glow: 'bg-lime-500/10' }, // Lime
+      { bg: 'from-indigo-500 to-indigo-600', border: 'border-indigo-400', shadow: 'shadow-indigo-500/30', glow: 'bg-indigo-500/10' }, // Indigo
+      { bg: 'from-yellow-500 to-yellow-600', border: 'border-yellow-400', shadow: 'shadow-yellow-500/30', glow: 'bg-yellow-500/10' }, // Yellow
+      { bg: 'from-pink-500 to-pink-600', border: 'border-pink-400', shadow: 'shadow-pink-500/30', glow: 'bg-pink-500/10' }, // Pink
+      { bg: 'from-teal-500 to-teal-600', border: 'border-teal-400', shadow: 'shadow-teal-500/30', glow: 'bg-teal-500/10' }, // Teal
+      { bg: 'from-red-500 to-red-600', border: 'border-red-400', shadow: 'shadow-red-500/30', glow: 'bg-red-500/10' }, // Red
+      { bg: 'from-purple-500 to-purple-600', border: 'border-purple-400', shadow: 'shadow-purple-500/30', glow: 'bg-purple-500/10' }, // Purple
+      { bg: 'from-green-500 to-green-600', border: 'border-green-400', shadow: 'shadow-green-500/30', glow: 'bg-green-500/10' }, // Green
+      { bg: 'from-amber-500 to-amber-600', border: 'border-amber-400', shadow: 'shadow-amber-500/30', glow: 'bg-amber-500/10' }, // Amber
+      { bg: 'from-sky-500 to-sky-600', border: 'border-sky-400', shadow: 'shadow-sky-500/30', glow: 'bg-sky-500/10' }, // Sky
+      { bg: 'from-pink-600 to-pink-700', border: 'border-pink-500', shadow: 'shadow-pink-600/30', glow: 'bg-pink-600/10' }, // Pink-600
+      { bg: 'from-green-600 to-green-700', border: 'border-green-500', shadow: 'shadow-green-600/30', glow: 'bg-green-600/10' }, // Green-600
+      { bg: 'from-blue-600 to-blue-700', border: 'border-blue-500', shadow: 'shadow-blue-600/30', glow: 'bg-blue-600/10' }, // Royal Blue
     ];
     return colors[layerIndex % colors.length];
   };
