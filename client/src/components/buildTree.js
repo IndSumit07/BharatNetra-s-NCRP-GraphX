@@ -18,7 +18,7 @@ export function buildTree(data) {
       .trim();
   };
 
-  // Helper function to get value by normalized key
+  // Helper function to  to get value by normalized key
   const getValueByNormalizedKey = (row, searchKeys) => {
     // Create a normalized map of the row
     const normalizedRow = {};
