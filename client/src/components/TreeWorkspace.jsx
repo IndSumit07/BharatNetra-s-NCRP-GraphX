@@ -257,7 +257,7 @@ export default function TreeWorkspace({ data }) {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent mb-2">
-                Transaction Flow Analyzer
+                BharatNetra's NCRP-GraphX
               </h1>
               <p className="text-slate-400 font-medium">Interactive layer-based hierarchy visualization</p>
             </div>
