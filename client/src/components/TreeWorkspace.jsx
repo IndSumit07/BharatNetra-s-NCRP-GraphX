@@ -286,7 +286,7 @@ Subject: Investigation regarding suspicious transaction - Account No: ${selected
 Dear Sir/Madam,
 
 This is to bring to your notice that the following account is involved in a cyber crime case.
-We request you to provide the KYC details and Statement of Account.
+We request you to provide the KYC details and Statement of Account and freeze the account as soon as possible.
 
 Account Details:
 --------------------------------
@@ -333,7 +333,7 @@ Investigation Officer`;
 
     doc.text("This is to bring to your notice that the following account is involved in a cyber crime case.", leftMargin, yPos);
     yPos += lineHeight;
-    doc.text("We request you to provide the KYC details and Statement of Account.", leftMargin, yPos);
+    doc.text("We request you to provide the KYC details and Statement of Account and freeze the account as soon as possible.", leftMargin, yPos);
     yPos += lineHeight * 2;
 
     doc.setFont("helvetica", "bold");
