@@ -98,8 +98,8 @@ export default function App() {
         {/* Header */}
         <div className="text-center mb-16 animate-fade-in space-y-6">
           <div className="flex justify-center mb-8">
-            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm group hover:border-cyan-500/50 transition-all duration-500 hover:scale-105">
-              <img src="/logo.png" alt="BharatNetra Logo" className="w-32 h-32 object-contain drop-shadow-2xl" />
+            <div className="p-6 bg-white border border-slate-200 rounded-3xl shadow-2xl group hover:border-cyan-500/50 transition-all duration-500 hover:scale-105 overflow-hidden">
+              <img src="/logo.png" alt="BharatNetra Logo" className="w-32 h-32 object-contain drop-shadow-xl" />
             </div>
           </div>
 
