@@ -20,6 +20,11 @@ export default function App() {
       return;
     }
 
+    if (file.size > 100 * 1024 * 1024) {
+      setError("File size exceeds 100MB limit");
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     setFileName(file.name);
@@ -159,7 +164,7 @@ export default function App() {
                 <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-500 font-medium">
                   <span className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-800/80">
                     <Info className="w-4 h-4 text-cyan-500/70" />
-                    Max file size: 50MB
+                    Max file size: 100MB
                   </span>
                   <span className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-800/80">
                     <Info className="w-4 h-4 text-cyan-500/70" />
@@ -196,7 +201,7 @@ export default function App() {
 
         {/* Footer */}
         <div className="text-center mt-20 text-slate-600 text-sm font-medium tracking-wide">
-          © {new Date().getFullYear()} BharatNetra Intelligence Systems. Secure Environment.
+          © 2025 BharatNetra | All rights reserved.
         </div>
       </div>
     </div>

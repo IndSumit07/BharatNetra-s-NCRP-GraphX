@@ -10,24 +10,21 @@ export function buildTree(data) {
   }
 
   // Helper function to normalize column names
-  // Removes spaces, dots, underscores, and converts to lowercase
   const normalizeKey = (key) => {
     return String(key)
       .toLowerCase()
-      .replace(/[\s._-]/g, "") // Remove spaces, dots, underscores, hyphens
+      .replace(/[\s._-]/g, "")
       .trim();
   };
 
-  // Helper function to  to get value by normalized key
+  // Helper function to get value by normalized key
   const getValueByNormalizedKey = (row, searchKeys) => {
-    // Create a normalized map of the row
     const normalizedRow = {};
     Object.keys(row).forEach((key) => {
       const normalizedKey = normalizeKey(key);
       normalizedRow[normalizedKey] = row[key];
     });
 
-    // Try each search key
     for (const searchKey of searchKeys) {
       const normalizedSearchKey = normalizeKey(searchKey);
       if (
@@ -41,21 +38,12 @@ export function buildTree(data) {
     return null;
   };
 
-  // Debug: Log first row to see column names
-  console.log("Original column names:", Object.keys(data[0]));
-  console.log(
-    "Normalized column names:",
-    Object.keys(data[0]).map((k) => normalizeKey(k))
-  );
-  console.log("Total rows:", data.length);
+  const accountMap = {}; // Maps accountNo -> Array of Nodes
+  const allNodes = []; // Linear list of all created nodes
+  const layerMap = {}; // For stats only
 
-  // Create a map of all accounts with their full data
-  const accountMap = {};
-  const layerMap = {};
-
-  // First pass: Create nodes with all transaction details
+  // First pass: Create nodes for EVERY row (no deduplication)
   data.forEach((row, index) => {
-    // Try to find Account No with various possible names
     const accountNo = getValueByNormalizedKey(row, [
       "Account No",
       "AccountNo",
@@ -66,24 +54,20 @@ export function buildTree(data) {
       "AC No",
     ]);
 
-    // Try to find Layer
     const layer = getValueByNormalizedKey(row, ["Layer", "Level"]) || 0;
 
-    if (index < 3) {
-      console.log(`Row ${index}: Account=${accountNo}, Layer=${layer}`);
-    }
-
     if (!accountNo) {
-      if (index < 3) {
+      if (index < 3)
         console.warn(`Skipping row ${index}: No account number found`);
-      }
       return;
     }
 
-    // Store all row data for tooltip display
     const nodeData = {
+      // Use a unique internal ID if needed, but 'name' is what's displayed.
+      // We keep name as Account No. distinct objects allow duplicates layout.
       name: String(accountNo),
       layer: Number(layer),
+      id: `${String(accountNo)}-${index}`, // Unique ID for finding this specific node instance
       attributes: {
         accountNo: accountNo,
         layer: layer,
@@ -99,7 +83,6 @@ export function buildTree(data) {
           "Acknowledgement",
           "AcknowledgementN",
           "Acknowledgement No",
-          "Acknowledgement No.",
         ]),
         ifscCode: getValueByNormalizedKey(row, [
           "IFSC Code",
@@ -111,7 +94,6 @@ export function buildTree(data) {
         state: getValueByNormalizedKey(row, ["State"]),
         district: getValueByNormalizedKey(row, ["District"]),
         policeStation: getValueByNormalizedKey(row, [
-          "police Station Name of Complain reported officer",
           "Police Station",
           "PS Name",
           "PoliceStation",
@@ -124,43 +106,37 @@ export function buildTree(data) {
           "Phone",
         ]),
         email: getValueByNormalizedKey(row, ["Email", "E-mail", "EmailID"]),
-        // Store all original data
         ...row,
       },
       children: [],
+      hasParent: false, // Track if this node is a child of someone
     };
 
-    accountMap[String(accountNo)] = nodeData;
+    allNodes.push(nodeData);
 
-    // Group by layer for hierarchy building
+    // Add to map (supporting duplicates)
+    const accStr = String(accountNo);
+    if (!accountMap[accStr]) {
+      accountMap[accStr] = [];
+    }
+    accountMap[accStr].push(nodeData);
+
+    // Stats
     const layerNum = Number(layer);
     if (!layerMap[layerNum]) {
       layerMap[layerNum] = [];
     }
-    layerMap[layerNum].push(String(accountNo));
+    layerMap[layerNum].push(nodeData);
   });
 
-  console.log("✅ Account map size:", Object.keys(accountMap).length);
-  console.log(
-    "✅ Layer distribution:",
-    Object.keys(layerMap)
-      .map((l) => `Layer ${l}: ${layerMap[l].length} accounts`)
-      .join(", ")
-  );
+  console.log("✅ Encapsulated Nodes Created:", allNodes.length);
 
-  // Second pass: Build parent-child relationships
+  // Second pass: Build Relationships
   let relationshipsFound = 0;
-  data.forEach((row) => {
-    const accountNo = String(
-      getValueByNormalizedKey(row, [
-        "Account No",
-        "AccountNo",
-        "Account Number",
-      ]) || ""
-    );
 
+  allNodes.forEach((node) => {
     const parentAccNo = String(
-      getValueByNormalizedKey(row, [
+      getValueByNormalizedKey(node.attributes, [
         "parent_acc_no",
         "ParentAccountNo",
         "Parent Account No",
@@ -169,70 +145,66 @@ export function buildTree(data) {
     );
 
     if (
-      accountNo &&
-      accountNo !== "null" &&
-      accountNo !== "" &&
       parentAccNo &&
       parentAccNo !== "null" &&
       parentAccNo !== "" &&
-      accountMap[parentAccNo] &&
-      accountMap[accountNo]
+      accountMap[parentAccNo]
     ) {
-      accountMap[parentAccNo].children.push(accountMap[accountNo]);
-      relationshipsFound++;
+      // Find suitable parents.
+      // Rule: Parent should ideally be in (ChildLayer - 1).
+      // If multiple parents exist in that layer, attach to ALL of them?
+      // Or just first? Let's attach to ALL parents in the immediately preceding layer
+      // to imply potential connections. If no parent in Layer-1, fall back to any parent.
+
+      const potentialParents = accountMap[parentAccNo];
+
+      // Filter for strict hierarchy first (Layer - 1)
+      let validParents = potentialParents.filter(
+        (p) => p.layer === node.layer - 1
+      );
+
+      // If no strict hierarchy parent found, try finding any parent with smaller layer?
+      // Or just relax to all potential parents.
+      if (validParents.length === 0) {
+        // Fallback: Check if there are any parents at lower layers
+        validParents = potentialParents.filter((p) => p.layer < node.layer);
+      }
+
+      // If still none, ignore (orphaned despite having parent name) OR attach to most recent?
+      // Let's attach to all valid candidates found.
+      if (validParents.length > 0) {
+        validParents.forEach((parent) => {
+          parent.children.push(node);
+          node.hasParent = true;
+          relationshipsFound++;
+        });
+      }
     }
   });
 
   console.log("✅ Parent-child relationships found:", relationshipsFound);
 
-  // Find root nodes (nodes with no parents or layer 0)
-  const roots = [];
+  // Roots: Nodes that have no parent
+  let roots = allNodes.filter((n) => !n.hasParent);
+  console.log("✅ Raw Roots found:", roots.length);
+
+  // If no roots (circular?), force layer 0
+  if (roots.length === 0 && allNodes.length > 0) {
+    roots = allNodes.filter((n) => n.layer === 0);
+    if (roots.length === 0) {
+      // Absolute fallback
+      roots = [allNodes[0]];
+    }
+  }
+
   const layers = Object.keys(layerMap)
     .map(Number)
     .sort((a, b) => a - b);
 
-  console.log("✅ Layers found:", layers);
-
-  // If we have explicit parent relationships, find nodes that aren't children
-  const childrenSet = new Set();
-  Object.values(accountMap).forEach((node) => {
-    node.children.forEach((child) => childrenSet.add(child.name));
-  });
-
-  console.log("✅ Total children nodes:", childrenSet.size);
-
-  // Find nodes that are not children of any other node
-  Object.values(accountMap).forEach((node) => {
-    if (!childrenSet.has(node.name)) {
-      roots.push(node);
-    }
-  });
-
-  console.log("✅ Root nodes found:", roots.length);
-
-  // If no roots found, use layer 0 or lowest layer
-  if (roots.length === 0 && layers.length > 0) {
-    const lowestLayer = layers[0];
-    console.log("⚠️ No roots found, using lowest layer as roots:", lowestLayer);
-    layerMap[lowestLayer].forEach((accountNo) => {
-      if (accountMap[accountNo]) {
-        roots.push(accountMap[accountNo]);
-      }
-    });
-  }
-
-  // If still no roots, use all nodes (they're all roots)
-  if (roots.length === 0) {
-    console.log(
-      "⚠️ No hierarchy found, treating all accounts as independent roots"
-    );
-    roots.push(...Object.values(accountMap));
-  }
-
   const result = {
     name: "Transaction Flow",
     attributes: {
-      totalAccounts: Object.keys(accountMap).length,
+      totalAccounts: allNodes.length,
       totalLayers: layers.length,
     },
     children: roots,
@@ -240,7 +212,6 @@ export function buildTree(data) {
 
   console.log("🎉 Final tree built successfully!");
   console.log("   Total accounts:", result.attributes.totalAccounts);
-  console.log("   Total layers:", result.attributes.totalLayers);
   console.log("   Root nodes:", roots.length);
 
   return result;
