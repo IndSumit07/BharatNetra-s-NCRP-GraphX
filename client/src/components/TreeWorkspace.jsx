@@ -9,7 +9,7 @@ import {
 import { jsPDF } from "jspdf";
 import InteractiveTreeView from "./InteractiveTreeView";
 
-export default function TreeWorkspace({ data }) {
+export default function TreeWorkspace({ data, onReset }) {
   const [selectedNode, setSelectedNode] = useState(null);
   const [hoveredNode, setHoveredNode] = useState(null);
   const [viewMode, setViewMode] = useState("layer"); // "layer" or "tree"
@@ -395,11 +395,16 @@ Investigation Officer`;
       <div className="sticky top-0 z-40 bg-gradient-to-b from-[#0a0e1a] via-[#0a0e1a]/95 to-transparent backdrop-blur-sm border-b border-slate-800/50">
         <div className="max-w-[1800px] mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent mb-2">
-                BharatNetra's NCRP-GraphX
-              </h1>
-              <p className="text-slate-400 font-medium">Interactive layer-based hierarchy visualization</p>
+            <div className="flex items-center gap-4 cursor-pointer" onClick={onReset}>
+              <div className="bg-slate-900/50 p-2 rounded-xl border border-slate-800 hover:border-cyan-500/50 transition-colors">
+                <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent mb-2">
+                  BharatNetra's NCRP-GraphX
+                </h1>
+                <p className="text-slate-400 font-medium">Interactive layer-based hierarchy visualization</p>
+              </div>
             </div>
             <div className="flex gap-4">
               {/* View Mode Toggle */}

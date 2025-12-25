@@ -73,7 +73,7 @@ export default function App() {
   if (treeData) {
     return (
       <>
-        <TreeWorkspace data={treeData} />
+        <TreeWorkspace data={treeData} onReset={handleReset} />
         <button
           onClick={handleReset}
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 border border-slate-200 font-medium rounded-lg shadow-xl shadow-slate-950/5 hover:bg-slate-50 hover:shadow-2xl hover:border-slate-300 transition-all duration-300 text-sm"
@@ -98,8 +98,8 @@ export default function App() {
         {/* Header */}
         <div className="text-center mb-16 animate-fade-in space-y-6">
           <div className="flex justify-center mb-8">
-            <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm group hover:border-cyan-500/50 transition-all duration-500 hover:scale-110">
-              <Package className="w-12 h-12 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
+            <div className="p-6 bg-slate-900/50 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm group hover:border-cyan-500/50 transition-all duration-500 hover:scale-105">
+              <img src="/logo.png" alt="BharatNetra Logo" className="w-32 h-32 object-contain drop-shadow-2xl" />
             </div>
           </div>
 
