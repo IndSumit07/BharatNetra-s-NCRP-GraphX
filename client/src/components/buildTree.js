@@ -45,6 +45,7 @@ export function buildTree(data) {
   // First pass: Create nodes for EVERY row (no deduplication)
   data.forEach((row, index) => {
     const accountNo = getValueByNormalizedKey(row, [
+      "Account No./ (Wallet /PG/PA) Id",
       "Account No",
       "AccountNo",
       "Account Number",
@@ -64,13 +65,13 @@ export function buildTree(data) {
 
     const nodeData = {
       // Use a unique internal ID if needed, but 'name' is what's displayed.
-      // We keep name as Account No. distinct objects allow duplicates layout.
       name: String(accountNo),
       layer: Number(layer),
-      id: `${String(accountNo)}-${index}`, // Unique ID for finding this specific node instance
+      id: `${String(accountNo)}-${index}`,
       attributes: {
         accountNo: accountNo,
         layer: layer,
+        // ... (other attributes same as before)
         sNo: getValueByNormalizedKey(row, [
           "S.No",
           "SNo",
@@ -109,12 +110,12 @@ export function buildTree(data) {
         ...row,
       },
       children: [],
-      hasParent: false, // Track if this node is a child of someone
+      hasParent: false,
     };
 
     allNodes.push(nodeData);
 
-    // Add to map (supporting duplicates)
+    // Add to map
     const accStr = String(accountNo);
     if (!accountMap[accStr]) {
       accountMap[accStr] = [];
@@ -135,12 +136,19 @@ export function buildTree(data) {
   let relationshipsFound = 0;
 
   allNodes.forEach((node) => {
+    // Try to find Parent (Sender)
     const parentAccNo = String(
       getValueByNormalizedKey(node.attributes, [
         "parent_acc_no",
         "ParentAccountNo",
         "Parent Account No",
         "Parent",
+        "Sender Account",
+        "Source Account",
+        "Debit Account",
+        "Remitter Account",
+        "Sender",
+        "Payer",
       ]) || ""
     );
 
@@ -163,11 +171,10 @@ export function buildTree(data) {
         (p) => p.layer === node.layer - 1
       );
 
-      // If no strict hierarchy parent found, try finding any parent with smaller layer?
-      // Or just relax to all potential parents.
+      // If no strict hierarchy parent found, fall back to ANY parent matching the account number.
+      // This ensures that if the Excel says A -> B, we connect them regardless of layer logic.
       if (validParents.length === 0) {
-        // Fallback: Check if there are any parents at lower layers
-        validParents = potentialParents.filter((p) => p.layer < node.layer);
+        validParents = potentialParents;
       }
 
       // If still none, ignore (orphaned despite having parent name) OR attach to most recent?

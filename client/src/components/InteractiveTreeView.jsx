@@ -64,22 +64,33 @@ export default function InteractiveTreeView({ data, onBack }) {
     const containerRef = useRef(null); // Container for wheel events
 
     // Organize nodes by layers
-    const organizeByLayers = useCallback((node, layerMap = {}) => {
+    const organizeByLayers = useCallback((node, layerMap = {}, visited = new Set()) => {
+        if (!node) return layerMap;
+
+        // Ensure Transaction Flow root is processed but its children are handled
         if (node.name === "Transaction Flow") {
             if (node.children && node.children.length > 0) {
-                node.children.forEach(child => organizeByLayers(child, layerMap));
+                node.children.forEach(child => organizeByLayers(child, layerMap, visited));
             }
             return layerMap;
         }
+
+        // Avoid infinite loops and duplicates
+        if (visited.has(node.id || node)) return layerMap;
+        visited.add(node.id || node);
 
         const nodeLayer = node.layer || 0;
         if (!layerMap[nodeLayer]) {
             layerMap[nodeLayer] = [];
         }
-        layerMap[nodeLayer].push(node);
+
+        // Only push if not already included (double check though Set should handle it)
+        if (!layerMap[nodeLayer].includes(node)) {
+            layerMap[nodeLayer].push(node);
+        }
 
         if (node.children && node.children.length > 0) {
-            node.children.forEach(child => organizeByLayers(child, layerMap));
+            node.children.forEach(child => organizeByLayers(child, layerMap, visited));
         }
 
         return layerMap;
@@ -326,7 +337,24 @@ export default function InteractiveTreeView({ data, onBack }) {
     // Memoize Connections Calculation
     const connections = useMemo(() => {
         const conns = [];
+        const nodeIdToKey = new Map();
+
+        // 1. Build Lookup Map for Node ID -> Position Key
+        layers.forEach((layerNum) => {
+            const nodes = layerMap[layerNum];
+            nodes.forEach((node, nodeIndex) => {
+                if (node.name === "Transaction Flow") return;
+                const key = `node-${layerNum}-${nodeIndex}`;
+                // buildTree adds unique 'id', use it if available
+                if (node.id) nodeIdToKey.set(node.id, key);
+            });
+        });
+
+        // 2. Generate Connections
         layers.forEach((layerNum, layerIndex) => {
+            // Skip if source layer is not expanded (hide connections from hidden nodes)
+            if (!expandedLayers[layerNum]) return;
+
             const nodes = layerMap[layerNum];
             nodes.forEach((node, nodeIndex) => {
                 if (node.name === "Transaction Flow") return;
@@ -334,20 +362,55 @@ export default function InteractiveTreeView({ data, onBack }) {
                 const nodePos = nodePositions[nodeKey];
                 if (!nodePos) return;
 
+                // A. Hub -> Account Spline (Existing)
                 const hubKey = `hub-${layerNum}`;
                 const hubPos = nodePositions[hubKey];
-                if (!hubPos) return;
+                if (hubPos) {
+                    conns.push({
+                        key: `wire-${nodeKey}`,
+                        d: `M ${hubPos.x + 200} ${hubPos.y + 60} C ${hubPos.x + 350} ${hubPos.y + 60}, ${nodePos.x - 100} ${nodePos.y + 70}, ${nodePos.x} ${nodePos.y + 70}`,
+                        color: getLayerColor(layerIndex).stroke,
+                        dashed: true
+                    });
+                }
 
-                // Hub -> Account Spline
-                conns.push({
-                    key: `wire-${nodeKey}`,
-                    d: `M ${hubPos.x + 200} ${hubPos.y + 60} C ${hubPos.x + 350} ${hubPos.y + 60}, ${nodePos.x - 100} ${nodePos.y + 70}, ${nodePos.x} ${nodePos.y + 70}`,
-                    color: getLayerColor(layerIndex).stroke
-                });
+                // B. Parent -> Child Connections (New)
+                if (node.children && node.children.length > 0) {
+                    node.children.forEach(child => {
+                        // Find child position key
+                        const childKey = nodeIdToKey.get(child.id);
+                        if (!childKey) return;
+
+                        // Parse child layer from key (node-LAYER-index)
+                        const parts = childKey.split('-');
+                        const childLayerNum = parseInt(parts[1]);
+
+                        // Only draw if child layer is also expanded
+                        if (!expandedLayers[childLayerNum]) return;
+
+                        const childPos = nodePositions[childKey];
+                        if (!childPos) return;
+
+                        // Calculate Spline from Node Right to Child Left
+                        const startX = nodePos.x + 320; // Width of card
+                        const startY = nodePos.y + 70;  // Center Y (Height 140/2)
+                        const endX = childPos.x;
+                        const endY = childPos.y + 70;
+
+                        conns.push({
+                            key: `link-${nodeKey}-${childKey}`,
+                            d: `M ${startX} ${startY} C ${startX + 100} ${startY}, ${endX - 100} ${endY}, ${endX} ${endY}`,
+                            color: '#ef4444', // Red for transaction/flow links
+                            dashed: false,
+                            width: 3,
+                            opacity: 0.8
+                        });
+                    });
+                }
             });
         });
         return conns;
-    }, [layers, layerMap, nodePositions]);
+    }, [layers, layerMap, nodePositions, expandedLayers]);
 
     const getAllAttributeValues = (attributes) => {
         if (!attributes) return [];
@@ -552,6 +615,9 @@ Investigation Officer`;
                                     <feMergeNode in="SourceGraphic" />
                                 </feMerge>
                             </filter>
+                            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="2" refY="3.5" orient="auto">
+                                <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
+                            </marker>
                         </defs>
 
                         {/* Transform Container (Hardware Accelerated) */}
@@ -564,28 +630,18 @@ Investigation Officer`;
                             <rect x="-5000" y="-5000" width="20000" height="20000" fill="url(#grid)" />
 
                             {/* Draw Connections */}
-                            {connections.map((conn) => {
-                                // Extract layer layerNum from conn.key? 
-                                // conn.key is `wire - node - ${ layerNum } -${ nodeIndex } `
-                                // We can use split.
-                                const parts = conn.key.split('-');
-                                const layerNum = parseInt(parts[2]);
-
-                                // Only show wire if layer is expanded
-                                if (!expandedLayers[layerNum]) return null;
-
-                                return (
-                                    <path
-                                        key={conn.key}
-                                        d={conn.d}
-                                        stroke={conn.color}
-                                        strokeWidth="2"
-                                        fill="none"
-                                        opacity="0.25"
-                                        strokeDasharray="4,4"
-                                    />
-                                );
-                            })}
+                            {connections.map((conn) => (
+                                <path
+                                    key={conn.key}
+                                    d={conn.d}
+                                    stroke={conn.color}
+                                    strokeWidth={conn.width || "2"}
+                                    fill="none"
+                                    opacity={conn.opacity || 0.4}
+                                    strokeDasharray={conn.dashed ? "4,4" : "0"}
+                                    markerEnd={!conn.dashed ? "url(#arrowhead)" : ""}
+                                />
+                            ))}
 
                             {/* Draw Layers */}
                             {layers.map((layerNum, layerIndex) => {
