@@ -396,8 +396,8 @@ Investigation Officer`;
         <div className="max-w-[1800px] mx-auto px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4 cursor-pointer" onClick={onReset}>
-              <div className="bg-white p-2 rounded-xl border border-slate-200 hover:border-cyan-500/50 transition-colors shadow-lg">
-                <img src="/logo.png" alt="Logo" className="w-12 h-12 object-contain" />
+              <div className="w-16 h-16 bg-white rounded-xl border border-slate-200 hover:border-cyan-500/50 transition-colors shadow-lg overflow-hidden flex-shrink-0">
+                <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
               </div>
               <div>
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent mb-2">
