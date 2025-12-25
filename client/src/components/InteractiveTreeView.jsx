@@ -407,13 +407,6 @@ Account Details:
 --------------------------------
 Account Number  : ${selectedNode.name}
 IFSC Code       : ${attr.ifscCode || 'N/A'}
-State           : ${attr.state || 'N/A'}
-District        : ${attr.district || 'N/A'}
-Police Station  : ${attr.policeStation || 'N/A'}
-
-Transaction Layer: ${selectedNode.layer}
-Mobile Number   : ${attr.mobileNumber || 'N/A'}
-Email ID        : ${attr.email || 'N/A'}
 
 Please treat this as urgent and provide the requested details immediately.
 
@@ -455,7 +448,7 @@ Investigation Officer`;
 
         doc.text("This is to bring to your notice that the following account is involved in a cyber crime case.", leftMargin, yPos);
         yPos += lineHeight;
-        doc.text("We request you to provide the KYC details and Statement of Account.", leftMargin, yPos);
+        doc.text("We request you to provide the KYC details and Statement of Account and freeze the account as soon as possible.", leftMargin, yPos);
         yPos += lineHeight * 2;
 
         doc.setFont("helvetica", "bold");
@@ -469,13 +462,6 @@ Investigation Officer`;
         const details = [
             `Account Number  : ${selectedNode.name}`,
             `IFSC Code       : ${attr.ifscCode || 'N/A'}`,
-            `State           : ${attr.state || 'N/A'}`,
-            `District        : ${attr.district || 'N/A'}`,
-            `Police Station  : ${attr.policeStation || 'N/A'}`,
-            "",
-            `Transaction Layer: ${selectedNode.layer}`,
-            `Mobile Number   : ${attr.mobileNumber || 'N/A'}`,
-            `Email ID        : ${attr.email || 'N/A'}`,
         ];
 
         details.forEach(line => {

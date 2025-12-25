@@ -292,13 +292,6 @@ Account Details:
 --------------------------------
 Account Number  : ${selectedNode.name}
 IFSC Code       : ${attr.ifscCode || 'N/A'}
-State           : ${attr.state || 'N/A'}
-District        : ${attr.district || 'N/A'}
-Police Station  : ${attr.policeStation || 'N/A'}
-
-Transaction Layer: ${selectedNode.layer}
-Mobile Number   : ${attr.mobileNumber || 'N/A'}
-Email ID        : ${attr.email || 'N/A'}
 
 Please treat this as urgent and provide the requested details immediately.
 
@@ -354,13 +347,6 @@ Investigation Officer`;
     const details = [
       `Account Number  : ${selectedNode.name}`,
       `IFSC Code       : ${attr.ifscCode || 'N/A'}`,
-      `State           : ${attr.state || 'N/A'}`,
-      `District        : ${attr.district || 'N/A'}`,
-      `Police Station  : ${attr.policeStation || 'N/A'}`,
-      "",
-      `Transaction Layer: ${selectedNode.layer}`,
-      `Mobile Number   : ${attr.mobileNumber || 'N/A'}`,
-      `Email ID        : ${attr.email || 'N/A'}`,
     ];
 
     details.forEach(line => {
