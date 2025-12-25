@@ -7,12 +7,23 @@ export function parseExcel(file, setTreeData) {
 
     reader.onload = (e) => {
       try {
-        const workbook = XLSX.read(e.target.result, { type: "binary" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const workbook = XLSX.read(e.target.result, { type: "array" });
+
+        console.log("Workbook Sheets:", workbook.SheetNames);
+
+        if (!workbook.SheetNames.length) {
+          reject(new Error("No sheets found in file"));
+          return;
+        }
+
+        const firstSheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheetName];
         const rows = XLSX.utils.sheet_to_json(sheet);
 
+        console.log(`Parsed ${rows.length} rows from sheet "${firstSheetName}"`);
+
         if (!rows || rows.length === 0) {
-          reject(new Error("Excel file is empty"));
+          reject(new Error("File detected as empty (no rows parsed)"));
           return;
         }
 
@@ -20,6 +31,7 @@ export function parseExcel(file, setTreeData) {
         setTreeData(tree);
         resolve(tree);
       } catch (error) {
+        console.error("Detailed parsing error:", error);
         reject(error);
       }
     };
@@ -28,6 +40,6 @@ export function parseExcel(file, setTreeData) {
       reject(new Error("Failed to read file"));
     };
 
-    reader.readAsBinaryString(file);
+    reader.readAsArrayBuffer(file);
   });
 }

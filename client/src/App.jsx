@@ -14,8 +14,9 @@ export default function App() {
   const handleFileSelect = async (file) => {
     if (!file) return;
 
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-      setError("Please upload a valid Excel file (.xlsx or .xls)");
+    const lowerName = file.name.toLowerCase();
+    if (!lowerName.endsWith('.xlsx') && !lowerName.endsWith('.xls') && !lowerName.endsWith('.csv')) {
+      setError("Please upload a valid Excel or CSV file (.xlsx, .xls, .csv)");
       return;
     }
 
@@ -135,7 +136,7 @@ export default function App() {
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".xlsx,.xls"
+                accept=".xlsx, .xls, .csv, .XLSX, .XLS, .CSV"
                 onChange={handleFileChange}
                 id="file-input"
                 className="hidden"
@@ -152,7 +153,7 @@ export default function App() {
               <div className="mt-8 space-y-3 max-w-md mx-auto">
                 <div className="flex items-center gap-3 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors">
                   <FileSpreadsheet className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-                  <span className="text-sm text-slate-300 font-medium">Supports .xlsx and .xls formats</span>
+                  <span className="text-sm text-slate-300 font-medium">Supports .xlsx, .xls and .csv formats</span>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors">
                   <Info className="w-5 h-5 text-cyan-400 flex-shrink-0" />

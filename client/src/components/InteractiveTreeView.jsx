@@ -4,8 +4,9 @@ import {
     Shield, User, Phone, Mail, Package, Calendar,
     CheckCircle, MessageSquare, Layers, FileSpreadsheet,
     MapPinned, Home, ZoomIn, ZoomOut, Maximize2, ArrowLeft,
-    ChevronRight, ChevronDown
+    ChevronRight, ChevronDown, FileText as FileIcon, Send, Copy, Download, Eye
 } from "lucide-react";
+import { jsPDF } from "jspdf";
 
 // Define helper function outside component to avoid initialization issues
 // Define helper function outside component to avoid initialization issues
@@ -43,6 +44,7 @@ export default function InteractiveTreeView({ data, onBack }) {
     const [draggingNode, setDraggingNode] = useState(null);
     const [hasDragged, setHasDragged] = useState(false);
     const [expandedLayers, setExpandedLayers] = useState({});
+    const [showApplication, setShowApplication] = useState(false);
 
     const toggleLayer = (layerNum) => {
         setExpandedLayers(prev => ({
@@ -316,7 +318,10 @@ export default function InteractiveTreeView({ data, onBack }) {
         }
     };
 
-    const handleCloseModal = () => setSelectedNode(null);
+    const handleCloseModal = () => {
+        setSelectedNode(null);
+        setShowApplication(false);
+    };
 
     // Memoize Connections Calculation
     const connections = useMemo(() => {
@@ -350,7 +355,7 @@ export default function InteractiveTreeView({ data, onBack }) {
         const fieldMappings = [
             { keys: ['accountNo', 'accountno', 'Account No', 'AccountNo'], label: 'Account Number', Icon: CreditCard },
             { keys: ['sNo', 'sno', 'S.No', 'SNo'], label: 'Serial Number', Icon: Hash },
-            { keys: ['fscCode', 'fsccode', 'FSC Code', 'FSC'], label: 'FSC Code', Icon: Building2 },
+            { keys: ['ifscCode', 'ifsccode', 'IFSC Code', 'IFSC', 'Bank IFSC'], label: 'IFSC Code', Icon: Building2 },
             { keys: ['state', 'State'], label: 'State', Icon: MapPin },
             { keys: ['district', 'District'], label: 'District', Icon: MapPinned },
             { keys: ['policeStation', 'Police Station'], label: 'Police Station', Icon: Shield },
@@ -382,6 +387,135 @@ export default function InteractiveTreeView({ data, onBack }) {
         });
 
         return fields;
+    };
+
+    const generateApplicationText = () => {
+        if (!selectedNode) return "";
+        const attr = selectedNode.attributes || {};
+        return `To,
+The Branch Manager,
+${attr.ifscCode ? `Bank (IFSC: ${attr.ifscCode})` : 'The Bank'}
+
+Subject: Investigation regarding suspicious transaction - Account No: ${selectedNode.name}
+
+Dear Sir/Madam,
+
+This is to bring to your notice that the following account is involved in a cyber crime case.
+We request you to provide the KYC details and Statement of Account.
+
+Account Details:
+--------------------------------
+Account Number  : ${selectedNode.name}
+IFSC Code       : ${attr.ifscCode || 'N/A'}
+State           : ${attr.state || 'N/A'}
+District        : ${attr.district || 'N/A'}
+Police Station  : ${attr.policeStation || 'N/A'}
+
+Transaction Layer: ${selectedNode.layer}
+Mobile Number   : ${attr.mobileNumber || 'N/A'}
+Email ID        : ${attr.email || 'N/A'}
+
+Please treat this as urgent and provide the requested details immediately.
+
+Sincerely,
+Investigation Officer`;
+    };
+
+    const generatePDFDocument = () => {
+        const doc = new jsPDF();
+        const attr = selectedNode.attributes || {};
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+
+        const date = new Date().toLocaleDateString();
+        let yPos = 20;
+        const leftMargin = 20;
+        const lineHeight = 7;
+
+        doc.text(`Date: ${date}`, 140, yPos);
+        yPos += lineHeight * 2;
+
+        doc.text("To,", leftMargin, yPos);
+        yPos += lineHeight;
+        doc.text("The Branch Manager,", leftMargin, yPos);
+        yPos += lineHeight;
+        doc.text(attr.ifscCode ? `Bank (IFSC: ${attr.ifscCode})` : 'The Bank', leftMargin, yPos);
+        yPos += lineHeight * 2;
+
+        doc.setFont("helvetica", "bold");
+        const subject = `Subject: Investigation regarding suspicious transaction - Account No: ${selectedNode.name}`;
+        const splitSubject = doc.splitTextToSize(subject, 170);
+        doc.text(splitSubject, leftMargin, yPos);
+        yPos += (lineHeight * splitSubject.length) + lineHeight;
+        doc.setFont("helvetica", "normal");
+
+        doc.text("Dear Sir/Madam,", leftMargin, yPos);
+        yPos += lineHeight * 1.5;
+
+        doc.text("This is to bring to your notice that the following account is involved in a cyber crime case.", leftMargin, yPos);
+        yPos += lineHeight;
+        doc.text("We request you to provide the KYC details and Statement of Account.", leftMargin, yPos);
+        yPos += lineHeight * 2;
+
+        doc.setFont("helvetica", "bold");
+        doc.text("Account Details:", leftMargin, yPos);
+        yPos += lineHeight;
+        doc.setLineWidth(0.5);
+        doc.line(leftMargin, yPos - 2, 80, yPos - 2);
+        doc.setFont("helvetica", "normal");
+        yPos += lineHeight;
+
+        const details = [
+            `Account Number  : ${selectedNode.name}`,
+            `IFSC Code       : ${attr.ifscCode || 'N/A'}`,
+            `State           : ${attr.state || 'N/A'}`,
+            `District        : ${attr.district || 'N/A'}`,
+            `Police Station  : ${attr.policeStation || 'N/A'}`,
+            "",
+            `Transaction Layer: ${selectedNode.layer}`,
+            `Mobile Number   : ${attr.mobileNumber || 'N/A'}`,
+            `Email ID        : ${attr.email || 'N/A'}`,
+        ];
+
+        details.forEach(line => {
+            doc.text(line, leftMargin, yPos);
+            yPos += lineHeight;
+        });
+
+        yPos += lineHeight;
+
+        doc.text("Please treat this as urgent and provide the requested details immediately.", leftMargin, yPos);
+        yPos += lineHeight * 2;
+
+        doc.text("Sincerely,", leftMargin, yPos);
+        yPos += lineHeight;
+        doc.setFont("helvetica", "bold");
+        doc.text("Investigation Officer", leftMargin, yPos);
+
+        return doc;
+    };
+
+    const handleDownloadPDF = () => {
+        const doc = generatePDFDocument();
+        doc.save(`Investigation_Request_${selectedNode.name}.pdf`);
+    };
+
+    const handleViewPDF = () => {
+        const doc = generatePDFDocument();
+        window.open(doc.output('bloburl'), '_blank');
+    };
+
+    const handleSendEmail = () => {
+        const text = generateApplicationText();
+        const subject = `Urgent Info Request - Account ${selectedNode.name}`;
+        const email = "cybercell-report@temp-mail.com";
+        const gmailUrl = `https://mail.google.com/mail/?view=cm&fs=1&to=${email}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`;
+        window.open(gmailUrl, '_blank');
+    };
+
+    const handleCopyApplication = () => {
+        navigator.clipboard.writeText(generateApplicationText());
     };
 
     return (
@@ -446,7 +580,7 @@ export default function InteractiveTreeView({ data, onBack }) {
                             {/* Draw Connections */}
                             {connections.map((conn) => {
                                 // Extract layer layerNum from conn.key? 
-                                // conn.key is `wire-node-${layerNum}-${nodeIndex}`
+                                // conn.key is `wire - node - ${ layerNum } -${ nodeIndex } `
                                 // We can use split.
                                 const parts = conn.key.split('-');
                                 const layerNum = parseInt(parts[2]);
@@ -562,8 +696,8 @@ export default function InteractiveTreeView({ data, onBack }) {
                                                                 {node.attributes?.state && (
                                                                     <text x="20" y="70" fill="#cbd5e1" fontSize="12">📍 {node.attributes.state}</text>
                                                                 )}
-                                                                {node.attributes?.fscCode && (
-                                                                    <text x="20" y="95" fill="#cbd5e1" fontSize="12">🏢 {node.attributes.fscCode}</text>
+                                                                {node.attributes?.ifscCode && (
+                                                                    <text x="20" y="95" fill="#cbd5e1" fontSize="12">🏢 {node.attributes.ifscCode}</text>
                                                                 )}
                                                                 <rect x="130" y="134" width="60" height="3" rx="1.5" fill="#334155" />
                                                             </g>
@@ -604,32 +738,96 @@ export default function InteractiveTreeView({ data, onBack }) {
                                     <X className="w-6 h-6 text-slate-400 group-hover:text-red-400 transition-colors" />
                                 </button>
                             </div>
-                            <div className="px-8 py-6 max-h-[calc(85vh-140px)] overflow-y-auto">
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {getAllAttributeValues(selectedNode.attributes).map((field, idx) => {
-                                        const IconComponent = field.Icon;
-                                        return (
-                                            <div key={idx} className="bg-[#0a0e1a] border border-slate-800 rounded-xl p-4 hover:border-cyan-500/50 transition-colors">
-                                                <div className="flex items-start gap-3">
-                                                    <IconComponent className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                                                    <div className="flex-1 min-w-0">
-                                                        <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">
-                                                            {field.label}
-                                                        </div>
-                                                        <div className="text-base text-white font-medium break-words">
-                                                            {String(field.value)}
+
+                            {/* Content */}
+                            <div className="px-8 py-6 max-h-[calc(85vh-200px)] overflow-y-auto">
+                                {showApplication ? (
+                                    <div className="bg-[#0a0e1a] border border-slate-800 rounded-xl p-6 font-mono text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
+                                        {generateApplicationText()}
+                                    </div>
+                                ) : (
+                                    <>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            {getAllAttributeValues(selectedNode.attributes).map((field, idx) => {
+                                                const IconComponent = field.Icon;
+                                                return (
+                                                    <div key={idx} className="bg-[#0a0e1a] border border-slate-800 rounded-xl p-4 hover:border-cyan-500/50 transition-colors">
+                                                        <div className="flex items-start gap-3">
+                                                            <IconComponent className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                                                            <div className="flex-1 min-w-0">
+                                                                <div className="text-xs text-slate-500 font-semibold uppercase tracking-wider mb-1">
+                                                                    {field.label}
+                                                                </div>
+                                                                <div className="text-base text-white font-medium break-words">
+                                                                    {String(field.value)}
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                );
+                                            })}
+                                        </div>
+                                        {getAllAttributeValues(selectedNode.attributes).length === 0 && (
+                                            <div className="text-center py-12">
+                                                <div className="text-6xl mb-4">📭</div>
+                                                <p className="text-slate-400 text-lg">No additional details available</p>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                                {getAllAttributeValues(selectedNode.attributes).length === 0 && (
-                                    <div className="text-center py-12">
-                                        <div className="text-6xl mb-4">📭</div>
-                                        <p className="text-slate-400 text-lg">No additional details available</p>
-                                    </div>
+                                        )}
+                                    </>
+                                )}
+                            </div>
+
+                            {/* Footer */}
+                            <div className="px-8 py-6 bg-[#0a0e1a]/50 border-t border-slate-800/50 flex items-center justify-end gap-3">
+                                {!showApplication ? (
+                                    <>
+                                        <button
+                                            onClick={() => setShowApplication(true)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#0f1419] border border-slate-700 hover:border-cyan-500 text-white rounded-lg transition-all"
+                                        >
+                                            <FileText className="w-4 h-4" />
+                                            Generate Application
+                                        </button>
+                                        <button
+                                            onClick={handleSendEmail}
+                                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold rounded-lg shadow-lg shadow-cyan-500/20 transition-all"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                            Report Transaction
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => setShowApplication(false)}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#0f1419] border border-slate-700 hover:border-cyan-500 text-white rounded-lg transition-all mr-auto"
+                                        >
+                                            <ChevronRight className="w-4 h-4 rotate-180" />
+                                            Back to Details
+                                        </button>
+
+                                        <button
+                                            onClick={handleViewPDF}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#0f1419] border border-slate-700 hover:border-cyan-500 text-white rounded-lg transition-all"
+                                        >
+                                            <Eye className="w-4 h-4" />
+                                            View PDF
+                                        </button>
+                                        <button
+                                            onClick={handleDownloadPDF}
+                                            className="flex items-center gap-2 px-4 py-2 bg-[#0f1419] border border-slate-700 hover:border-cyan-500 text-white rounded-lg transition-all"
+                                        >
+                                            <Download className="w-4 h-4" />
+                                            Download PDF
+                                        </button>
+                                        <button
+                                            onClick={handleSendEmail}
+                                            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-cyan-500 to-cyan-600 hover:from-cyan-400 hover:to-cyan-500 text-white font-semibold rounded-lg shadow-lg shadow-cyan-500/20 transition-all"
+                                        >
+                                            <Send className="w-4 h-4" />
+                                            Send Email
+                                        </button>
+                                    </>
                                 )}
                             </div>
                         </div>
