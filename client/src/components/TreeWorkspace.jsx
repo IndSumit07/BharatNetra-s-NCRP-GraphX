@@ -3,7 +3,8 @@ import {
   MapPin, Hash, FileText, Building2, MapPinned, Home,
   Shield, User, Phone, Mail, CreditCard, Package,
   Calendar, CheckCircle, MessageSquare, Layers, X, FileSpreadsheet,
-  LayoutGrid, GitBranch, ChevronRight, ChevronDown, Send, Copy, Download, Eye
+  LayoutGrid, GitBranch, ChevronRight, ChevronDown, Send, Copy, Download, Eye,
+  Search, Filter
 } from "lucide-react";
 import { jsPDF } from "jspdf";
 import InteractiveTreeView from "./InteractiveTreeView";
@@ -14,6 +15,8 @@ export default function TreeWorkspace({ data }) {
   const [viewMode, setViewMode] = useState("layer"); // "layer" or "tree"
   const [expandedPhases, setExpandedPhases] = useState({});
   const [showApplication, setShowApplication] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedIfsc, setSelectedIfsc] = useState("");
 
   const togglePhase = (layerNum) => {
     setExpandedPhases(prev => {
@@ -69,6 +72,25 @@ export default function TreeWorkspace({ data }) {
 
   const layerMap = useMemo(() => organizeByLayers(data), [data]);
   const layers = useMemo(() => Object.keys(layerMap).map(Number).sort((a, b) => a - b), [layerMap]);
+
+  // Helper to safely get IFSC
+  const getIfsc = (node) => {
+    const keys = ['ifscCode', 'ifsccode', 'IFSC Code', 'IFSCCode', 'IFSC', 'ifsc_code', 'ifsc'];
+    if (!node.attributes) return null;
+    for (const key of keys) {
+      if (node.attributes[key]) return node.attributes[key];
+    }
+    return null;
+  };
+
+  const allIfscCodes = useMemo(() => {
+    const codes = new Set();
+    Object.values(layerMap).flat().forEach(node => {
+      const ifsc = getIfsc(node);
+      if (ifsc) codes.add(ifsc);
+    });
+    return Array.from(codes).sort();
+  }, [layerMap]);
 
   const handleNodeClick = (node) => {
     setSelectedNode(node);
@@ -443,6 +465,34 @@ Investigation Officer`;
               <div className="flex items-center justify-between">
                 {/* View Mode Toggle */}
                 <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <input
+                      type="text"
+                      placeholder="Search Account No..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="bg-[#0f1419] border border-slate-800 text-sm text-white pl-9 pr-4 py-2 rounded-lg focus:outline-none focus:border-cyan-500/50 w-64 transition-all"
+                    />
+                  </div>
+
+                  <div className="relative">
+                    <Filter className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                    <select
+                      value={selectedIfsc}
+                      onChange={(e) => setSelectedIfsc(e.target.value)}
+                      className="bg-[#0f1419] border border-slate-800 text-sm text-white pl-9 pr-8 py-2 rounded-lg focus:outline-none focus:border-cyan-500/50 appearance-none cursor-pointer min-w-[160px] transition-all"
+                    >
+                      <option value="">All IFSC Codes</option>
+                      {allIfscCodes.map(code => (
+                        <option key={code} value={code}>{code}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="w-4 h-4 text-slate-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  </div>
+
+                  <div className="w-px h-8 bg-slate-800 mx-2"></div>
+
                   <button
                     onClick={() => setViewMode("layer")}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 ${viewMode === "layer"
@@ -482,6 +532,18 @@ Investigation Officer`;
             <div className="space-y-6">
               {layers.map((layerNum, layerIndex) => {
                 const nodes = layerMap[layerNum];
+                const filteredNodes = nodes.filter(node => {
+                  if (node.name === "Transaction Flow") return false;
+
+                  const matchesSearch = node.name.toLowerCase().includes(searchQuery.toLowerCase());
+                  const nodeIfsc = getIfsc(node);
+                  const matchesIfsc = selectedIfsc ? nodeIfsc === selectedIfsc : true;
+
+                  return matchesSearch && matchesIfsc;
+                });
+
+                if (filteredNodes.length === 0 && (searchQuery || selectedIfsc)) return null;
+
                 const colors = getLayerColor(layerIndex);
                 const isRootLayer = layerNum === 0;
                 const isExpanded = expandedPhases[layerNum] !== false; // Default to expanded
@@ -506,13 +568,13 @@ Investigation Officer`;
                               {isRootLayer ? 'Root Layer' : `Layer ${layerNum}`}
                             </h2>
                             <p className="text-white/80 text-sm font-medium mt-1">
-                              {nodes.length} {nodes.length === 1 ? 'Account' : 'Accounts'}
+                              {filteredNodes.length} {filteredNodes.length === 1 ? 'Account' : 'Accounts'}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-4">
                           <div className="px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm">
-                            <span className="text-white font-bold text-lg">{nodes.length}</span>
+                            <span className="text-white font-bold text-lg">{filteredNodes.length}</span>
                           </div>
                           <div className="p-2 bg-white/10 rounded-lg group-hover:bg-white/20 transition-colors">
                             {isExpanded ? (
@@ -529,7 +591,7 @@ Investigation Officer`;
                         <div className="p-6 bg-[#0a0e1a]/50">
                           {/* Accounts Grid */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4">
-                            {nodes.map((node, nodeIndex) => {
+                            {filteredNodes.map((node, nodeIndex) => {
                               if (node.name === "Transaction Flow") return null;
 
                               const hasChildren = node.children && node.children.length > 0;
