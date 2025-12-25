@@ -71,9 +71,9 @@ export default function App() {
         <TreeWorkspace data={treeData} />
         <button
           onClick={handleReset}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-semibold rounded-xl shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 hover:-translate-y-0.5 transition-all duration-300"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-2.5 bg-white text-slate-900 border border-slate-200 font-medium rounded-lg shadow-xl shadow-slate-950/5 hover:bg-slate-50 hover:shadow-2xl hover:border-slate-300 transition-all duration-300 text-sm"
         >
-          <RefreshCw className="w-5 h-5" />
+          <RefreshCw className="w-4 h-4" />
           Upload New File
         </button>
       </>
@@ -81,57 +81,62 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen w-full relative overflow-x-hidden flex items-center justify-center p-10 bg-[#0a0e1a]">
-      {/* Background Effects */}
-      <div className="fixed top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-radial from-cyan-500/10 to-transparent animate-pulse-slow" />
-        <div className="absolute -bottom-1/2 -right-1/2 w-full h-full bg-gradient-radial from-cyan-600/10 to-transparent animate-pulse-slow" style={{ animationDelay: '1s' }} />
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.03)_1px,transparent_1px)] bg-[size:50px_50px]" />
+    <div className="min-h-screen w-full relative overflow-x-hidden flex items-center justify-center p-8 bg-slate-950 text-slate-50 font-sans selection:bg-cyan-500/30">
+      {/* Subtle Professional Background */}
+      <div className="fixed inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b_1px,transparent_1px),linear-gradient(to_bottom,#1e293b_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-20" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-slate-800 to-transparent opacity-50"></div>
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl w-full relative z-10">
+      <div className="max-w-5xl w-full relative z-10">
         {/* Header */}
-        <div className="text-center mb-12 animate-fade-in">
-          <div className="flex justify-center mb-6">
-            <div className="p-4 bg-gradient-to-br from-cyan-500/20 to-cyan-600/20 rounded-2xl backdrop-blur-sm border border-cyan-500/30">
-              <Package className="w-12 h-12 text-cyan-400" />
+        <div className="text-center mb-16 animate-fade-in space-y-6">
+          <div className="flex justify-center mb-8">
+            <div className="p-4 bg-slate-900/50 border border-slate-800 rounded-2xl shadow-2xl backdrop-blur-sm group hover:border-cyan-500/50 transition-all duration-500 hover:scale-110">
+              <Package className="w-12 h-12 text-cyan-400 group-hover:text-cyan-300 transition-colors" />
             </div>
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent">
-            BharatNetra's NCRP-GraphX
+
+          <h1 className="text-6xl md:text-7xl font-bold tracking-tight mb-4 text-white drop-shadow-2xl">
+            BharatNetra <span className="bg-gradient-to-r from-cyan-400 to-cyan-200 bg-clip-text text-transparent font-extrabold pb-2">NCRP-GraphX</span>
           </h1>
-          <p className="text-lg text-slate-400 font-medium max-w-2xl mx-auto">
-            Visualize complex transaction hierarchies with interactive layer-based diagrams
+          <p className="text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-light tracking-wide">
+            Advanced financial transaction visualization and layering analysis platform for investigation professionals.
           </p>
         </div>
 
         {/* Upload Card */}
         <div
-          className={`bg-[#0f1419] border-2 rounded-3xl p-16 text-center transition-all duration-300 ${isDragging
-            ? 'border-cyan-500 bg-cyan-500/5 scale-[1.02]'
-            : 'border-slate-800 hover:border-slate-700'
+          className={`relative bg-slate-900/60 border rounded-3xl p-12 lg:p-16 text-center transition-all duration-300 backdrop-blur-md ${isDragging
+            ? 'border-cyan-500 bg-cyan-500/10 ring-4 ring-cyan-500/20 scale-[1.02]'
+            : 'border-slate-800 hover:border-slate-700 shadow-2xl shadow-black/40 hover:shadow-cyan-900/20'
             }`}
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
         >
           {isLoading ? (
-            <div className="py-10">
-              <div className="w-16 h-16 mx-auto mb-6 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-              <h3 className="text-xl font-bold text-white mb-2">Processing {fileName}...</h3>
-              <p className="text-slate-400">Building transaction hierarchy</p>
+            <div className="py-12">
+              <div className="relative w-20 h-20 mx-auto mb-8">
+                <div className="absolute inset-0 border-t-4 border-cyan-500 rounded-full animate-spin"></div>
+                <div className="absolute inset-2 border-t-4 border-slate-700 rounded-full opacity-50"></div>
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2 tracking-tight">Processing Analysis...</h3>
+              <p className="text-slate-400 text-base">Parsing complex transaction hierarchy for {fileName}</p>
             </div>
           ) : (
-            <>
-              <div className="mb-6">
-                <Upload className="w-16 h-16 mx-auto text-cyan-500/80 transition-transform hover:scale-110 hover:text-cyan-500" />
-              </div>
+            <div className="space-y-10">
+              <div className="group cursor-pointer" onClick={() => fileInputRef.current.click()}>
+                <div className="w-24 h-24 bg-slate-800/80 rounded-3xl mx-auto mb-8 flex items-center justify-center border border-slate-700 group-hover:border-cyan-500/50 group-hover:scale-110 transition-all duration-300 shadow-xl group-hover:shadow-cyan-500/20">
+                  <Upload className="w-10 h-10 text-slate-400 group-hover:text-cyan-400 transition-colors" />
+                </div>
 
-              <h2 className="text-3xl font-bold text-white mb-3">Upload Excel File</h2>
-              <p className="text-slate-400 text-base mb-8 font-medium">
-                Drag and drop your Excel file here, or click to browse
-              </p>
+                <h2 className="text-4xl font-bold text-white mb-4 tracking-tight">Upload Transaction Data</h2>
+                <p className="text-slate-400 text-xl max-w-xl mx-auto leading-relaxed">
+                  Drag and drop your <span className="text-cyan-200 font-bold font-mono text-sm px-2 py-1 bg-cyan-900/30 rounded border border-cyan-500/20">.xlsx</span> or <span className="text-cyan-200 font-bold font-mono text-sm px-2 py-1 bg-cyan-900/30 rounded border border-cyan-500/20">.csv</span> file
+                </p>
+              </div>
 
               <input
                 ref={fileInputRef}
@@ -142,57 +147,56 @@ export default function App() {
                 className="hidden"
               />
 
-              <label
-                htmlFor="file-input"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-cyan-500 to-cyan-600 text-white font-semibold rounded-xl cursor-pointer shadow-lg shadow-cyan-500/30 hover:shadow-xl hover:shadow-cyan-500/40 hover:-translate-y-0.5 transition-all duration-300"
-              >
-                <Upload className="w-5 h-5" />
-                Choose File
-              </label>
+              <div className="flex flex-col items-center gap-8">
+                <label
+                  htmlFor="file-input"
+                  className="inline-flex items-center gap-3 px-10 py-5 bg-gradient-to-r from-cyan-600 to-cyan-500 hover:from-cyan-500 hover:to-cyan-400 text-white font-bold text-lg rounded-2xl cursor-pointer transition-all duration-300 shadow-xl shadow-cyan-900/40 hover:shadow-cyan-500/30 hover:-translate-y-1 min-w-[240px] justify-center"
+                >
+                  <FileSpreadsheet className="w-6 h-6" />
+                  Select Spreadsheet
+                </label>
 
-              <div className="mt-8 space-y-3 max-w-md mx-auto">
-                <div className="flex items-center gap-3 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors">
-                  <FileSpreadsheet className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-                  <span className="text-sm text-slate-300 font-medium">Supports .xlsx, .xls and .csv formats</span>
-                </div>
-                <div className="flex items-center gap-3 p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-xl hover:bg-cyan-500/10 transition-colors">
-                  <Info className="w-5 h-5 text-cyan-400 flex-shrink-0" />
-                  <span className="text-sm text-slate-300 font-medium">Ensure your file has Account No and Layer columns</span>
+                <div className="flex flex-wrap justify-center gap-4 text-sm text-slate-500 font-medium">
+                  <span className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-800/80">
+                    <Info className="w-4 h-4 text-cyan-500/70" />
+                    Max file size: 50MB
+                  </span>
+                  <span className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 rounded-xl border border-slate-800/80">
+                    <Info className="w-4 h-4 text-cyan-500/70" />
+                    Required columns: Account No, Layer
+                  </span>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {error && (
-            <div className="mt-6 flex items-center justify-center gap-3 p-4 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 font-semibold animate-fade-in">
-              <Info className="w-5 h-5 flex-shrink-0" />
-              {error}
+            <div className="absolute top-6 right-6 max-w-md bg-red-950/80 border border-red-500/30 text-red-200 px-6 py-4 rounded-xl flex items-start gap-3 shadow-2xl backdrop-blur-md animate-in fade-in slide-in-from-top-4 text-left">
+              <Info className="w-6 h-6 flex-shrink-0 mt-0.5 text-red-400" />
+              <div className="text-base font-medium leading-relaxed">{error}</div>
             </div>
           )}
         </div>
 
         {/* Features Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-12">
-          <div className="bg-[#0f1419] border border-slate-800 rounded-2xl p-6 text-center hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">
-            <TreeDeciduous className="w-10 h-10 mx-auto mb-4 text-cyan-400" />
-            <h3 className="text-lg font-bold text-white mb-2">Layer-wise View</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">Organized by transaction layers</p>
-          </div>
-          <div className="bg-[#0f1419] border border-slate-800 rounded-2xl p-6 text-center hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">
-            <Search className="w-10 h-10 mx-auto mb-4 text-cyan-400" />
-            <h3 className="text-lg font-bold text-white mb-2">Interactive Details</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">Click for complete information</p>
-          </div>
-          <div className="bg-[#0f1419] border border-slate-800 rounded-2xl p-6 text-center hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">
-            <Palette className="w-10 h-10 mx-auto mb-4 text-cyan-400" />
-            <h3 className="text-lg font-bold text-white mb-2">Professional Design</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">Clean and modern interface</p>
-          </div>
-          <div className="bg-[#0f1419] border border-slate-800 rounded-2xl p-6 text-center hover:border-cyan-500/50 hover:-translate-y-1 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10">
-            <Zap className="w-10 h-10 mx-auto mb-4 text-cyan-400" />
-            <h3 className="text-lg font-bold text-white mb-2">Fast Processing</h3>
-            <p className="text-sm text-slate-400 leading-relaxed">Instant analysis and visualization</p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mt-16 opacity-90">
+          {[
+            { icon: TreeDeciduous, label: "Layer Visualization", desc: "Automated hierarchy mapping" },
+            { icon: Search, label: "Deep Inspection", desc: "Interactive node details" },
+            { icon: Palette, label: "Smart Coloring", desc: "Distinct phase identification" },
+            { icon: Zap, label: "Instant Analysis", desc: "Real-time graph generation" }
+          ].map((feature, idx) => (
+            <div key={idx} className="bg-slate-900/60 border border-slate-800/50 rounded-2xl p-6 text-center hover:bg-slate-800/60 hover:border-cyan-500/30 transition-all duration-300 hover:-translate-y-1 group">
+              <feature.icon className="w-10 h-10 mx-auto mb-4 text-slate-600 group-hover:text-cyan-400 transition-colors" />
+              <div className="text-lg font-bold text-slate-200 mb-2">{feature.label}</div>
+              <div className="text-sm text-slate-500 group-hover:text-slate-400">{feature.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="text-center mt-20 text-slate-600 text-sm font-medium tracking-wide">
+          © {new Date().getFullYear()} BharatNetra Intelligence Systems. Secure Environment.
         </div>
       </div>
     </div>
