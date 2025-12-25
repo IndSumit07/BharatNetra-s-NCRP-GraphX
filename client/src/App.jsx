@@ -107,7 +107,7 @@ export default function App() {
             BharatNetra <span className="bg-gradient-to-r from-cyan-400 to-cyan-200 bg-clip-text text-transparent font-extrabold pb-2">NCRP-GraphX</span>
           </h1>
           <p className="text-2xl text-slate-400 max-w-3xl mx-auto leading-relaxed font-light tracking-wide">
-            Advanced financial transaction visualization and layering analysis platform for investigation professionals.
+            Comprehensive Cyber Intelligence Tool for Law Enforcement Agencies
           </p>
         </div>
 

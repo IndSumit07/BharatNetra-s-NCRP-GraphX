@@ -403,7 +403,7 @@ Investigation Officer`;
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-cyan-600 bg-clip-text text-transparent mb-2">
                   BharatNetra's NCRP-GraphX
                 </h1>
-                <p className="text-slate-400 font-medium">Interactive layer-based hierarchy visualization</p>
+                <p className="text-slate-400 font-medium">Comprehensive Cyber Intelligence Tool for Law Enforcement Agencies</p>
               </div>
             </div>
             <div className="flex gap-4">
